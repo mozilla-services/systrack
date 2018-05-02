@@ -60,18 +60,13 @@ func getSysInfo() (sysinfo string, err error) {
 
 // getLSBRelease reads the linux identity from lsb_release -a
 func getLSBRelease() (desc string, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = fmt.Errorf("getLSBRelease() -> %v", e)
-		}
-	}()
 	path, err := exec.LookPath("lsb_release")
 	if err != nil {
-		return "", fmt.Errorf("lsb_release is not present")
+		return
 	}
 	out, err := exec.Command(path, "-i", "-r", "-c", "-s").Output()
 	if err != nil {
-		panic(err)
+		return
 	}
 	desc = fmt.Sprintf("%s", out[0:len(out)-1])
 	desc = cleanString(desc)
@@ -79,22 +74,33 @@ func getLSBRelease() (desc string, err error) {
 }
 
 // getIssue parses /etc/issue and returns the first line
-func getIssue() (initname string, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = fmt.Errorf("getIssue() -> %v", e)
-		}
-	}()
+func getIssue() (string, error) {
 	issue, err := ioutil.ReadFile("/etc/issue")
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	loc := bytes.IndexAny(issue, "\n")
 	if loc < 2 {
 		return "", fmt.Errorf("issue string not found")
 	}
-	initname = fmt.Sprintf("%s", issue[0:loc])
-	return
+	return fmt.Sprintf("%s", issue[0:loc]), nil
+}
+
+// getDist parses various distribution files to find the distro version
+func getDist() (string, error) {
+	data, err := ioutil.ReadFile("/etc/centos-release")
+	if err != nil {
+		return "", nil
+	}
+	loc := bytes.IndexAny(data, "\n")
+	if loc < 2 {
+		return "", fmt.Errorf("issue string not found")
+	}
+	issue := fmt.Sprintf("%s", data[0:loc])
+	if strings.HasPrefix(issue, "CentOS Linux release 7") {
+		issue = "centos:7"
+	}
+	return issue, nil
 }
 
 // cleanString removes spaces, quotes and newlines

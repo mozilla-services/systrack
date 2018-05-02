@@ -97,8 +97,17 @@ func getDist() (string, error) {
 		return "", fmt.Errorf("issue string not found")
 	}
 	issue := fmt.Sprintf("%s", data[0:loc])
+	if strings.HasPrefix(issue, "CentOS Linux release 5") {
+		return "centos:5", nil
+	}
+	if strings.HasPrefix(issue, "CentOS Linux release 6") {
+		return "centos:6", nil
+	}
 	if strings.HasPrefix(issue, "CentOS Linux release 7") {
-		issue = "centos:7"
+		return "centos:7", nil
+	}
+	if strings.HasPrefix(issue, "CentOS Linux release 8") {
+		return "centos:8", nil
 	}
 	return issue, nil
 }

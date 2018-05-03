@@ -27,6 +27,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	tags, err := getInstanceTags(instanceid)
+	if err != nil {
+		log.Fatal(err)
+	}
 	// get a list of all system packages
 	for _, pkg := range scribe.QueryPackages() {
 		logger.WithFields(logrus.Fields{
@@ -35,6 +39,7 @@ func main() {
 			"issue":        issue,
 			"instanceid":   instanceid,
 			"instancetype": instancetype,
+			"instancetags": tags,
 			"localip":      localip,
 			"ami":          ami,
 			"pkgname":      pkg.Name,

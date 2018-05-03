@@ -11,7 +11,12 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
 func getAWSMetadata() (instanceid, instancetype, localip, ami string, err error) {
@@ -28,6 +33,16 @@ func getAWSMetadata() (instanceid, instancetype, localip, ami string, err error)
 		return
 	}
 	ami, err = awsFetchMeta("ami-id")
+	return
+}
+
+func getAWSRegion() (region string, err error) {
+	region, err = awsFetchMeta("placement/availability-zone")
+	if err != nil {
+		return
+	}
+	// trim the last character that represents the availability zone
+	region = region[:len(region)-1]
 	return
 }
 
@@ -55,5 +70,44 @@ func awsFetchMeta(endpoint string) (result string, err error) {
 		return
 	}
 	result = string(body)
+	return
+}
+
+func getInstanceTags(instanceid string) (tags []string, err error) {
+	// do not read this code. it is unapologetically ugly.
+	akey := os.Getenv("AWS_ACCESS_KEY_ID")
+	skey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	origRegion := os.Getenv("AWS_REGION")
+	os.Setenv("AWS_SECRET_ACCESS_KEY", "")
+	os.Setenv("AWS_ACCESS_KEY_ID", "")
+	region, err := getAWSRegion()
+	if err != nil {
+		return
+	}
+	os.Setenv("AWS_REGION", region)
+	defer func() {
+		os.Setenv("AWS_ACCESS_KEY_ID", akey)
+		os.Setenv("AWS_SECRET_ACCESS_KEY", skey)
+		os.Setenv("AWS_REGION", origRegion)
+	}()
+
+	svc := ec2.New(session.New())
+	input := &ec2.DescribeTagsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("resource-id"),
+				Values: []*string{
+					aws.String(instanceid),
+				},
+			},
+		},
+	}
+	result, err := svc.DescribeTags(input)
+	if err != nil {
+		return
+	}
+	for _, tag := range result.Tags {
+		tags = append(tags, fmt.Sprintf("%s=%s", *tag.Key, *tag.Value))
+	}
 	return
 }

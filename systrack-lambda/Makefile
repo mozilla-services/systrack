@@ -8,7 +8,7 @@ package:
 dep:
 	go get ./...
 
-lambda: clean dep pkgcheck-lambda cache
+lambda: clean pkgcheck-lambda cache
 	apt-get update
 	apt-get install -y zip
 	zip -r pkgcheck-lambda.zip pkgcheck-lambda cache

@@ -1,26 +1,23 @@
-all: pkgcheck-lambda
+all: systrack-lambda
 
 package:
-	docker run -i --rm -v `pwd`:/go/src/github.com/mozilla-services/pkgcheck-lambda \
+	docker run -i --rm -v `pwd`:/go/src/github.com/mozilla-services/systrack/systrack-lambda \
 	    golang:1.10 \
-	    /bin/bash -c 'cd /go/src/github.com/mozilla-services/pkgcheck-lambda && make lambda'
+	    /bin/bash -c 'cd /go/src/github.com/mozilla-services/systrack/systrack-lambda && make lambda'
 
-dep:
-	go get ./...
-
-lambda: clean pkgcheck-lambda cache
+lambda: clean systrack-lambda cache
 	apt-get update
 	apt-get install -y zip
-	zip -r pkgcheck-lambda.zip pkgcheck-lambda cache
+	zip -r systrack-lambda.zip systrack-lambda cache
 
-cache: pkgcheck-lambda
+cache: systrack-lambda
 	mkdir cache
-	env CACHEDIR=./cache MAKECACHE=1 ./pkgcheck-lambda
+	env CACHEDIR=./cache MAKECACHE=1 ./systrack-lambda
 
 clean:
-	rm -rf pkgcheck-lambda.zip pkgcheck-lambda cache
+	rm -rf systrack-lambda.zip systrack-lambda cache
 
-pkgcheck-lambda: main.go rhel.go
-	go build -o pkgcheck-lambda -ldflags="-s -w" main.go rhel.go
+systrack-lambda: main.go rhel.go
+	go build -o systrack-lambda -ldflags="-s -w" main.go rhel.go
 
-.PHONY: clean dep lambda package cache
+.PHONY: clean lambda package cache

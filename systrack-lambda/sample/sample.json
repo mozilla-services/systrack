@@ -1,0 +1,1 @@
+{"Hostname": "sample", "Timestamp": 0, "Time": "2012-04-23T18:25:43.511Z", "Fields": { "ami": "ami", "dist": "centos:7", "fqdn": "sample.host", "instanceid": "instanceid", "instancetype": "instancetype", "instancetags": [ "Test=Test", "App=sampleapp" ], "pkgarch": "amd64", "pkgname": "sudo", "pkgversion": "0.0.1" }}

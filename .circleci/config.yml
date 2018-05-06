@@ -1,0 +1,18 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/mozilla-services/systrack
+    docker:
+      - image: circleci/golang:1.9
+    steps:
+      - checkout
+      - run:
+          name: Build Systrack
+          command: |
+            cd cmd/systrack
+            make
+      - run:
+          name: Systrack Lambda
+          command: |
+            cd systrack-lambda
+            make
